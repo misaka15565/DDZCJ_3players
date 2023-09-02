@@ -184,14 +184,14 @@ int main(int argc, char *argv[]) {
             exit(0);
         }
         // cout << "请输入对方出的牌：\n";
-        tmp = getMove(x.enemy1Cards, x.lastMove, enemy1);
+        tmp = getMove(x.enemy1Cards, x.lastMoveOwner==enemy1?move():x.lastMove, enemy1);
         if (tmp.type != TYPE_0_PASS) {
             x.enemy1Cards.remove(tmp.mainCard);
             x.enemy1Cards.remove(tmp.subCard);
             x.lastMove = tmp;
             x.lastMoveOwner = enemy1;
         }
-        tmp = getMove(x.enemy2Cards, x.lastMove, enemy2);
+        tmp = getMove(x.enemy2Cards, x.lastMoveOwner==enemy2?move():x.lastMove, enemy2);
         if (tmp.type != TYPE_0_PASS) {
             x.enemy2Cards.remove(tmp.mainCard);
             x.enemy2Cards.remove(tmp.subCard);
