@@ -177,7 +177,7 @@ int main(int argc, char *argv[]) {
         ptmove(result.bestMove);
         x.ourCards.remove(result.bestMove.mainCard);
         x.ourCards.remove(result.bestMove.subCard);
-        x.lastMove = result.bestMove;
+        if (result.bestMove.type != TYPE_0_PASS) x.lastMove = result.bestMove;
         if (result.bestMove.type != TYPE_0_PASS) x.lastMoveOwner = our;
         if (x.ourCards.cardNum() == 0) {
             cout << "我方胜利\n";
