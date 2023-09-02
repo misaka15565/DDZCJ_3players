@@ -34,15 +34,16 @@ cards str2cards(const string &x) {
     }
     return result;
 }
-move getMove(const cards &x, move lastMove) {
+move getMove(const cards &x, move lastMove, const int8 playerid) {
     possibleMoveSet p(x, lastMove);
     while (true) {
         cout << "---------------------------\n";
-        cout << "对方的牌：";
+        cout << "敌人" << (int)playerid << "的牌：";
         ptcards(x);
-        cout << "\n我方上一次出牌：";
+        cout << "\n"
+             << (playerid == enemy1 ? "我方" : "敌人1") << "上一次出牌：";
         ptmove(lastMove);
-        cout << "请输入对方出的牌：\n";
+        cout << "请输入敌人" << (int)playerid << "出的牌：\n";
         cout << "---------------------------\n";
         string t;
         cin >> t;
@@ -84,7 +85,8 @@ int main(int argc, char *argv[]) {
     string strourcards;
     string strenemycards;
     cards ours;
-    cards enemys;
+    cards enemy1card;
+    cards enemy2card;
     cout << "请输入我方的牌，输入s进入禁用特定牌型模式:\n";
     cin >> strourcards;
     if (strourcards == "s") {
@@ -106,43 +108,62 @@ int main(int argc, char *argv[]) {
         cin >> strourcards;
     }
     ours = str2cards(strourcards);
-    cout << "请输入对方的牌:\n";
+
+    cout << "请输入敌人1的牌:\n";
     cin >> strenemycards;
-    enemys = str2cards(strenemycards);
+    enemy1card = str2cards(strenemycards);
+
+    cout << "请输入敌人2的牌:\n";
+    cin >> strenemycards;
+    enemy2card = str2cards(strenemycards);
+
     move tmp;
     status x;
     x.currentPlayer = our;
-    x.enemyCards = enemys;
+    x.enemy1Cards = enemy1card;
+    x.enemy2Cards = enemy2card;
     x.ourCards = ours;
     x.lastMove = tmp;
+    x.lastMoveOwner = our;
+    /*
     if (argc > 1) {
         string t = argv[1];
         if (t == "-enemyfirst") {
             cout << "对手先出：\n";
             cout << "请输入对方出的牌：\n";
-            tmp = getMove(x.enemyCards, tmp);
-            x.enemyCards.remove(tmp.mainCard);
-            x.enemyCards.remove(tmp.subCard);
+            tmp = getMove(x.enemy1Cards, tmp);
+            x.enemy1Cards.remove(tmp.mainCard);
+            x.enemy1Cards.remove(tmp.subCard);
             x.lastMove = tmp;
         }
     }
+    */
     cout << "我方的牌：";
     ptcards(ours);
     cout << endl;
-    cout << "对方的牌：";
-    ptcards(enemys);
+    cout << "敌人1的牌：";
+    ptcards(enemy1card);
     cout << endl;
+    cout << "敌人2的牌：";
+    ptcards(enemy2card);
+    cout << endl;
+
     clock_t start, end;
     int l = 0;
-    while (x.ourCards.cardNum() > 0 && x.enemyCards.cardNum() > 0) {
+    while (x.ourCards.cardNum() > 0 && x.enemy1Cards.cardNum() > 0 && x.enemy2Cards.cardNum() > 0) {
         cout << "---------------------------\n";
         cout << "开始计算\n";
+
         cout << "我方的牌：";
         ptcards(x.ourCards);
         cout << endl;
-        cout << "对方的牌：";
-        ptcards(x.enemyCards);
+        cout << "敌人1的牌：";
+        ptcards(x.enemy1Cards);
         cout << endl;
+        cout << "敌人2的牌：";
+        ptcards(x.enemy2Cards);
+        cout << endl;
+
         start = clock();
         returned_result result = minMaxSearch(x);
         end = clock();
@@ -156,15 +177,27 @@ int main(int argc, char *argv[]) {
         ptmove(result.bestMove);
         x.ourCards.remove(result.bestMove.mainCard);
         x.ourCards.remove(result.bestMove.subCard);
+        x.lastMove = result.bestMove;
+        if (result.bestMove.type != TYPE_0_PASS) x.lastMoveOwner = our;
         if (x.ourCards.cardNum() == 0) {
             cout << "我方胜利\n";
             exit(0);
         }
         // cout << "请输入对方出的牌：\n";
-        tmp = getMove(x.enemyCards, result.bestMove);
-        x.enemyCards.remove(tmp.mainCard);
-        x.enemyCards.remove(tmp.subCard);
-        x.lastMove = tmp;
+        tmp = getMove(x.enemy1Cards, x.lastMove, enemy1);
+        if (tmp.type != TYPE_0_PASS) {
+            x.enemy1Cards.remove(tmp.mainCard);
+            x.enemy1Cards.remove(tmp.subCard);
+            x.lastMove = tmp;
+            x.lastMoveOwner = enemy1;
+        }
+        tmp = getMove(x.enemy2Cards, x.lastMove, enemy2);
+        if (tmp.type != TYPE_0_PASS) {
+            x.enemy2Cards.remove(tmp.mainCard);
+            x.enemy2Cards.remove(tmp.subCard);
+            x.lastMove = tmp;
+            x.lastMoveOwner = enemy2;
+        }
     }
     return 0;
 }

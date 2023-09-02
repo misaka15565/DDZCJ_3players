@@ -75,12 +75,15 @@ cards::cards() :
     cardCount{} {
 }
 
-bool cards::operator==(const cards &b) const{
+bool cards::operator==(const cards &b) const {
     return cardCount == b.cardCount;
 }
-bool cards::operator<(const cards &b) const{
+bool cards::operator<(const cards &b)const {
     for (int8 i = 0; i < N; i++) {
-        if (cardCount[i] < b.cardCount[i]) return true;
+        if (cardCount[i] < b.cardCount[i])
+            return true;
+        else if (cardCount[i] > b.cardCount[i])
+            return false;
     }
     return false;
 }

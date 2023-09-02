@@ -12,8 +12,10 @@
 
 const int8 maxScore = 100;
 const int8 minScore = 0;
+// 出牌顺序：我方、敌人1、敌人2、我方……
 const int8 our = 0;
-const int8 enemy = 1;
+const int8 enemy1 = 1;
+const int8 enemy2 = 2;
 
 string status2id(const status &x) {
     string id;
@@ -27,11 +29,19 @@ string status2id(const status &x) {
     }
 
     ++k;
-    tmp[k] = x.currentPlayer == our ? '{' : '}';
+    tmp[k] = x.currentPlayer == our ? '|' : (x.currentPlayer == enemy1 ? '{' : '}');
     for (int i = 0; i < N; ++i) {
-        if (x.enemyCards.cardCount[i] == 0) continue;
+        if (x.enemy1Cards.cardCount[i] == 0) continue;
         ++k;
-        tmp[k] = (i << 3) + x.enemyCards.cardCount[i];
+        tmp[k] = (i << 3) + x.enemy1Cards.cardCount[i];
+    }
+
+    ++k;
+    tmp[k] =  x.lastMoveOwner == our ? '|' : (x.lastMoveOwner == enemy1 ? '{' : '}');
+    for (int i = 0; i < N; ++i) {
+        if (x.enemy2Cards.cardCount[i] == 0) continue;
+        ++k;
+        tmp[k] = (i << 3) + x.enemy2Cards.cardCount[i];
     }
 
     ++k;
@@ -78,30 +88,50 @@ void buildMap(status x, returned_result &result) {
     returned_result minEmptyResult = {minScore, tmp};
     returned_result maxEmptyResult = {maxScore, tmp};
 
-    if (x.currentPlayer == enemy && x.ourCards.cardNum() == 0) {
+    // 若当前玩家为我方的下家（敌人1）且我方牌已经出完
+    if (x.currentPlayer == enemy1 && x.ourCards.cardNum() == 0) {
         caldCache.insert(id, maxEmptyResult);
         result = maxEmptyResult;
         return;
     }
-    if (x.currentPlayer == our && x.enemyCards.cardNum() == 0) {
+    // 若当前玩家为敌人2且敌人1已经出完牌
+    if (x.currentPlayer == enemy2 && x.enemy1Cards.cardNum() == 0) {
+        caldCache.insert(id, minEmptyResult);
+        result = minEmptyResult;
+        return;
+    }
+    // 若当前玩家为我方且敌人2已经出完牌
+    if (x.currentPlayer == our && x.enemy2Cards.cardNum() == 0) {
         caldCache.insert(id, minEmptyResult);
         result = minEmptyResult;
         return;
     }
 
-    possibleMoveSet possibleMoves(x.currentPlayer == our ? x.ourCards : x.enemyCards, x.lastMove);
+    // 获取当前玩家可能出牌列表
+    possibleMoveSet possibleMoves(x.currentPlayer == our ? x.ourCards :
+                                                           (x.currentPlayer == enemy1 ? x.enemy1Cards :
+                                                                                        x.enemy2Cards),
+                                  x.lastMoveOwner == x.currentPlayer ? move() : x.lastMove);
     for (auto i = possibleMoves.moveSet.rbegin(); i != possibleMoves.moveSet.rend(); i++) {
         status y = x;
         if (x.currentPlayer == our) {
             y.ourCards.remove(i->mainCard);
             y.ourCards.remove(i->subCard);
-            y.currentPlayer = enemy;
+            y.currentPlayer = enemy1;
+        } else if (x.currentPlayer == enemy1) {
+            y.enemy1Cards.remove(i->mainCard);
+            y.enemy1Cards.remove(i->subCard);
+            y.currentPlayer = enemy2;
         } else {
-            y.enemyCards.remove(i->mainCard);
-            y.enemyCards.remove(i->subCard);
+            y.enemy2Cards.remove(i->mainCard);
+            y.enemy2Cards.remove(i->subCard);
             y.currentPlayer = our;
         }
-        y.lastMove = *i;
+        // y.lastMove = *i;//
+        if (i->type != TYPE_0_PASS) {
+            y.lastMove = *i;
+            y.lastMoveOwner = x.currentPlayer;
+        }
 
         buildMap(y, res2);
         if (x.currentPlayer == our) {
