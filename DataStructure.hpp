@@ -24,7 +24,7 @@ public:
     bool operator==(const cards &b) const;
     bool operator<(const cards &b) const;
 };
-bool operator<(const cards &a, const cards &b);
+
 class move {
 public:
     cards mainCard;
