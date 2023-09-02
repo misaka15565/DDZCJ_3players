@@ -18,34 +18,48 @@ const int8 enemy = 1;
 string status2id(const status &x) {
     string id;
     char tmp[100] = {0};
-    int k = 0;
+
+    int k = -1;
     for (int i = 0; i < N; ++i) {
         if (x.ourCards.cardCount[i] == 0) continue;
+        ++k;
         tmp[k] = (i << 3) + x.ourCards.cardCount[i];
-        k++;
-    }
-    tmp[k] = x.currentPlayer == our ? '{' : '}';
-    k++;
-    for (int i = 0; i < N; ++i) {
-        if (x.enemyCards.cardCount[i] == 0) continue;
-        tmp[k] = (i << 3) + x.enemyCards.cardCount[i];
-        k++;
     }
 
+    ++k;
+    tmp[k] = x.currentPlayer == our ? '{' : '}';
+    for (int i = 0; i < N; ++i) {
+        if (x.enemyCards.cardCount[i] == 0) continue;
+        ++k;
+        tmp[k] = (i << 3) + x.enemyCards.cardCount[i];
+    }
+
+    ++k;
     tmp[k] = '|';
-    k++;
     for (int i = 0; i < N; ++i) {
         if (x.lastMove.mainCard.cardCount[i] == 0) continue;
+        ++k;
         tmp[k] = (i << 3) + x.lastMove.mainCard.cardCount[i];
-        k++;
     }
+    if (tmp[k] == '|') {
+        tmp[k] = 0;
+        id = tmp;
+        return id;
+    }
+
+    ++k;
     tmp[k] = '|';
-    k++;
     for (int i = 0; i < N; ++i) {
         if (x.lastMove.subCard.cardCount[i] == 0) continue;
+        ++k;
         tmp[k] = (i << 3) + x.lastMove.subCard.cardCount[i];
-        k++;
     }
+    if (tmp[k] == '|') {
+        tmp[k] = 0;
+        id = tmp;
+        return id;
+    }
+
     id = tmp;
     return id;
 }
